@@ -39,6 +39,9 @@
     <string name="pref_key_notification_image_layout">notifLayout</string>
     <string name="pref_key_notification_image_isimage">notifisImage</string>
 
+    <string name="pref_key_notification_image_value_intent">notifiValueIntent</string>
+    <string name="pref_key_notification_image_value_intent_default">defaultIntent</string>
+
 
 
     <string name="analytics_event">Rating Notification</string>

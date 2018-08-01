@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.example.tj_notifyrating.utils.Stuff;
 
@@ -100,6 +101,16 @@ public class Module_NotifyRating {
         sharedEdit.apply();
     }
 
+    public Module_NotifyRating(Activity activity,boolean isNotificationImage, Class<?> className) {
+        this.activity = activity;
+        this.className = className;
+        this.myStuff = new Stuff();
+        shared = PreferenceManager.getDefaultSharedPreferences(activity);
+        sharedEdit = PreferenceManager.getDefaultSharedPreferences(activity).edit();
+        sharedEdit.putBoolean(activity.getResources().getString(R.string.pref_key_notification_image_isimage), isNotificationImage);
+        sharedEdit.apply();
+    }
+
 
     /**
      * SETTER METHOD
@@ -130,12 +141,13 @@ public class Module_NotifyRating {
      * @return current instance
      */
 
-    public Module_NotifyRating set_TextAndIconAndImage(String title, String subtitle, int smallIcon,int bigIcon,int layout) {
+    public Module_NotifyRating set_TextAndIconAndImage(String title, String subtitle, int smallIcon,int bigIcon,int layout,String valueIntent) {
         sharedEdit.putString(activity.getResources().getString(R.string.pref_key_notification_image_title), title);
         sharedEdit.putString(activity.getResources().getString(R.string.pref_key_notification_image_subtitle), subtitle);
         sharedEdit.putInt(activity.getResources().getString(R.string.pref_key_notification_image_icon_small), smallIcon);
         sharedEdit.putInt(activity.getResources().getString(R.string.pref_key_notification_image_icon_big), bigIcon);
         sharedEdit.putInt(activity.getResources().getString(R.string.pref_key_notification_image_layout), layout);
+        sharedEdit.putString(activity.getResources().getString(R.string.pref_key_notification_image_value_intent), valueIntent);
         sharedEdit.apply();
         return this;
     }

@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.example.tj_notifyrating.utils.Stuff;
@@ -69,6 +70,7 @@ public class ServiceNotification extends Service {
     private ArrayList<String> logsCollector;
     SharedPreferences.Editor sharedEdit;
     private boolean isnotificationImage;
+    private String valueIntent;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -279,19 +281,11 @@ public class ServiceNotification extends Service {
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
                 notificationBigIcon);
         int notificationId = 333;
-      /*  String channelId = "channel-01";
-        String channelName = "Channel Name";
-        int importance = NotificationManager.IMPORTANCE_HIGH;
-*/
+
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         RemoteViews remoteViews = new RemoteViews(getPackageName(),notificationLayout);
 
-       /* if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel mChannel = new NotificationChannel(
-                    channelId, channelName, importance);
-            notificationManager.createNotificationChannel(mChannel);
-        }*/
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(notificationSmallIcon)
@@ -303,6 +297,9 @@ public class ServiceNotification extends Service {
                 .setStyle(new NotificationCompat.BigPictureStyle()
                         .bigPicture(icon)
                         .bigLargeIcon(null));
+
+        Log.d("wadada","sendPushNotificationImage :" +valueIntent);
+        intent.putExtra(valueIntent,true);
         mBuilder.setPriority(Notification.PRIORITY_MAX);
         final Notification notification = mBuilder.build();
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
@@ -315,7 +312,7 @@ public class ServiceNotification extends Service {
     }
 
     private void getSettingsFromPref() {
-
+        Log.d("asjkdhgfasdf","getSettingsFromPref");
         try {
             SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -344,6 +341,8 @@ public class ServiceNotification extends Service {
             notificationLayout = shared.getInt(getResources().getString(R.string.pref_key_notification_image_layout), R.layout.support_simple_spinner_dropdown_item);
 
             isnotificationImage = shared.getBoolean(getResources().getString(R.string.pref_key_notification_image_isimage), false);
+
+            valueIntent =  shared.getString(getResources().getString(R.string.pref_key_notification_image_value_intent), getResources().getString(R.string.pref_key_notification_image_value_intent_default));
 
 
         } catch (Exception ignored) { }
