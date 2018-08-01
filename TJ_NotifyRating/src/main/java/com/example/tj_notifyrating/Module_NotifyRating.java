@@ -98,6 +98,7 @@ public class Module_NotifyRating {
         sharedEdit = PreferenceManager.getDefaultSharedPreferences(activity).edit();
     }
 
+
     /**
      * SETTER METHOD
      *
@@ -116,6 +117,26 @@ public class Module_NotifyRating {
     }
 
 
+    /**
+     * SETTER METHOD
+     *
+     * @param title    - custom title for notification
+     * @param subtitle - custom subtitle for notification
+     * @param smallIcon     - custom icon drawable for notification
+     * @param bigIcon    - custom icon drawable for notification
+     * @param layout     - custom layout for big image notification
+     * @return current instance
+     */
+
+    public Module_NotifyRating set_TextAndIconAndImage(String title, String subtitle, int smallIcon,int bigIcon,int layout) {
+        sharedEdit.putString(activity.getResources().getString(R.string.pref_key_notification_image_title), title);
+        sharedEdit.putString(activity.getResources().getString(R.string.pref_key_notification_image_subtitle), subtitle);
+        sharedEdit.putInt(activity.getResources().getString(R.string.pref_key_notification_image_icon_small), smallIcon);
+        sharedEdit.putInt(activity.getResources().getString(R.string.pref_key_notification_image_icon_big), bigIcon);
+        sharedEdit.putInt(activity.getResources().getString(R.string.pref_key_notification_image_layout), layout);
+        sharedEdit.apply();
+        return this;
+    }
 
     /**
      * SETTER METHOD
