@@ -68,6 +68,7 @@ public class ServiceNotification extends Service {
 
     private ArrayList<String> logsCollector;
     SharedPreferences.Editor sharedEdit;
+    private boolean isnotificationImage;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -215,8 +216,11 @@ public class ServiceNotification extends Service {
                 sharedEdit.putInt(getResources().getString(R.string.pref_key_timeNotificationAppears), nrTimesNotficationAppear);
                 sharedEdit.apply();
 
-                sendPushNotification(context, intent);
-                sendPushNotificationImage(context, intent);
+                if(isnotificationImage){
+                    sendPushNotificationImage(context, intent);
+                }else {
+                    sendPushNotification(context, intent);
+                }
 
             } else if (pushFlag && !internetConnectionLive && sercureFlag) {
 
@@ -338,6 +342,8 @@ public class ServiceNotification extends Service {
             notificationSmallIcon = shared.getInt(getResources().getString(R.string.pref_key_notification_image_icon_small), R.drawable.ic_launcher);
             notificationBigIcon = shared.getInt(getResources().getString(R.string.pref_key_notification_image_icon_big), R.drawable.ic_launcher);
             notificationLayout = shared.getInt(getResources().getString(R.string.pref_key_notification_image_layout), R.layout.support_simple_spinner_dropdown_item);
+
+            isnotificationImage = shared.getBoolean(getResources().getString(R.string.pref_key_notification_image_isimage), false);
 
 
         } catch (Exception ignored) { }

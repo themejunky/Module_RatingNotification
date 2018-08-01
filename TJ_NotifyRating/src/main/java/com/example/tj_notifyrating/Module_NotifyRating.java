@@ -86,7 +86,7 @@ public class Module_NotifyRating {
      * @param packageName - common name of the packageName to search for any other instance flavors
      */
     @SuppressWarnings("unused")
-    public Module_NotifyRating(Activity activity, Class<?> className, String packageName) {
+    public Module_NotifyRating(Activity activity,boolean isNotificationImage, Class<?> className, String packageName) {
         this.activity = activity;
         this.className = className;
         this.myStuff = new Stuff();
@@ -96,6 +96,8 @@ public class Module_NotifyRating {
 
         shared = PreferenceManager.getDefaultSharedPreferences(activity);
         sharedEdit = PreferenceManager.getDefaultSharedPreferences(activity).edit();
+        sharedEdit.putBoolean(activity.getResources().getString(R.string.pref_key_notification_image_isimage), isNotificationImage);
+        sharedEdit.apply();
     }
 
 
