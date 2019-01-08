@@ -2,6 +2,7 @@ package com.example.tj_notifyrating;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -219,8 +220,10 @@ public class ServiceNotification extends Service {
                 sharedEdit.apply();
 
                 if(isnotificationImage){
+                    Log.d("qd2wfdaewf","1");
                     sendPushNotificationImage(context, intent);
                 }else {
+                    Log.d("qd2wfdaewf","2");
                     sendPushNotification(context, intent);
                 }
 
@@ -258,22 +261,35 @@ public class ServiceNotification extends Service {
 
 
     private void sendPushNotification(Context context,Intent myIntent) {
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        int notificationId = 1;
+        String channelId = "channel-01";
+        String channelName = "Channel Name1";
+        int importance = NotificationManager.IMPORTANCE_HIGH;
 
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, myIntent, 0);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel mChannel = new NotificationChannel(
+                    channelId, channelName, importance);
+            notificationManager.createNotificationChannel(mChannel);
+        }
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(notificationIcon)
                 .setContentTitle(notificationTitle)
                 .setWhen(System.currentTimeMillis())
                 .setContentText(notificationSubtitle)
                 .setAutoCancel(true);
 
-        mBuilder.setContentIntent(contentIntent);
-        Notification note = mBuilder.build();
-        note.defaults |= Notification.DEFAULT_LIGHTS;
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        stackBuilder.addNextIntent(myIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
+                0,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        mBuilder.setContentIntent(resultPendingIntent);
 
-        mNotificationManager.notify(12345, note);
+        notificationManager.notify(notificationId, mBuilder.build());
+
     }
 
 
@@ -281,13 +297,19 @@ public class ServiceNotification extends Service {
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
                 notificationBigIcon);
         int notificationId = 333;
-
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = "channel-02";
+        String channelName = "Channel Name2";
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel mChannel = new NotificationChannel(
+                    channelId, channelName, importance);
+            notificationManager.createNotificationChannel(mChannel);
+        }
 
         RemoteViews remoteViews = new RemoteViews(getPackageName(),notificationLayout);
-
-
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(notificationSmallIcon)
                 .setContentTitle(notificationImageTitle)
                 .setContentText(notificationImageSubtitle)
@@ -298,16 +320,14 @@ public class ServiceNotification extends Service {
                         .bigPicture(icon)
                         .bigLargeIcon(null));
 
-        Log.d("wadada","sendPushNotificationImage :" +valueIntent);
-        intent.putExtra(valueIntent,true);
-        mBuilder.setPriority(Notification.PRIORITY_MAX);
-        final Notification notification = mBuilder.build();
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         stackBuilder.addNextIntent(intent);
-
-        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
+                0,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
         mBuilder.setContentIntent(resultPendingIntent);
-        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+
         notificationManager.notify(notificationId, mBuilder.build());
     }
 
