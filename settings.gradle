@@ -1,1 +1,1 @@
-include ':app', ':TJ_NotifyRating', ':TJ_Gae-release'
+include ':app', ':TJ_NotifyRating'
