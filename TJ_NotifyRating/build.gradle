@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 26
     buildToolsVersion '28.0.3'
 
     defaultConfig {
@@ -24,12 +24,10 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.google.android.gms:play-services-analytics:16.0.6'
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:support-media-compat:28.0.0'
-    implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.google.android.gms:play-services-analytics:11.0.1'
+    implementation 'com.android.support:appcompat-v7:25.3.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.0.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.0.0'
+    implementation 'com.google.code.gson:gson:2.7'
     implementation 'com.github.themejunky:Module_GoogleAnalyticsEvents:1.0.1'
 }
