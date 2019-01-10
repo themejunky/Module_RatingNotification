@@ -38,6 +38,7 @@
     <string name="pref_key_notification_image_icon_big">notifBigIcon</string>
     <string name="pref_key_notification_image_layout">notifLayout</string>
     <string name="pref_key_notification_image_isimage">notifisImage</string>
+    <string name="pref_key_notification_issilent">isSilent</string>
 
     <string name="pref_key_notification_image_value_intent">notifiValueIntent</string>
     <string name="pref_key_notification_image_value_intent_default">defaultIntent</string>

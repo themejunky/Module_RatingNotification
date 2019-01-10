@@ -1,6 +1,7 @@
 package com.example.tj_notifyrating;
 
 import android.app.AlarmManager;
+import android.app.AppOpsManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -10,16 +11,24 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.service.notification.StatusBarNotification;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.example.tj_notifyrating.utils.Stuff;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
@@ -67,10 +76,10 @@ public class ServiceNotification extends Service {
 
     private int nextWakeUp;
     private String typeInternetLive = "none";
-
+    private Boolean sercureFlag;
     private ArrayList<String> logsCollector;
     SharedPreferences.Editor sharedEdit;
-    private boolean isnotificationImage;
+    private boolean isnotificationImage,isSilent;
     private String valueIntent;
 
     @Override
@@ -191,14 +200,28 @@ public class ServiceNotification extends Service {
 
     private void notificationLogic(Context context,Intent intent) {
 
-        Boolean sercureFlag=false;
+
         Boolean internetConnectionLive = myStuff.checkForInternetConnection(this);
         Boolean internetConnection = myStuff.haveNetworkConnection(this);
 
-        if (nrTimesNotficationAppear<=nrOfNotifications) {
-             sercureFlag = true;
+        final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        StatusBarNotification sad[] = new StatusBarNotification[1];
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            sad = notificationManager.getActiveNotifications();
+        }
+        if (nrTimesNotficationAppear<=nrOfNotifications && sad.length==0 ) {
+                sercureFlag = true;
+            }else {
+            sercureFlag = false;
         }
 
+
+        if(sad.length==1){
+            logsCollector.add("* Notification : is shown");
+        }else {
+            logsCollector.add("* Notification : is not shown");
+        }
+        logsCollector.add("* Notification : "+pushFlag);
         logsCollector.add("* PushFlag : "+pushFlag);
         logsCollector.add("* SecureFlag : "+sercureFlag +" ("+nrTimesNotficationAppear+"<="+nrOfNotifications+")");
         logsCollector.add("* InternetConection : "+internetConnection);
@@ -207,7 +230,6 @@ public class ServiceNotification extends Service {
 
         if (internetConnection) {
             if (pushFlag && internetConnectionLive && sercureFlag) {
-
                 if (mGae!=null) { mGae.getEvents(categoryNormalEvent,"NOTIFY_RATING_LIB No. "+nrTimesNotficationAppear,"Send : true | ALL GOOD | PF : "+pushFlag+" | SF "+(nrTimesNotficationAppear<=nrOfNotifications)+" | IC : "+internetConnection+" | ICL : "+internetConnectionLive); }
 
                 // all good normal shit
@@ -220,15 +242,28 @@ public class ServiceNotification extends Service {
                 sharedEdit.apply();
 
                 if(isnotificationImage){
-                    Log.d("qd2wfdaewf","1");
                     sendPushNotificationImage(context, intent);
                 }else {
-                    Log.d("qd2wfdaewf","2");
                     sendPushNotification(context, intent);
                 }
 
-            } else if (pushFlag && !internetConnectionLive && sercureFlag) {
+            }else if (internetConnectionLive && sad.length==1) {
+                if (nrTimesNotficationAppear>nrOfNotifications ) {
+                    sercureFlag = false;
+                    pushFlag=false;
+                }
+                if (mGae!=null) { mGae.getEvents(categoryNormalEvent,"NOTIFY_RATING_LIB No. "+nrTimesNotficationAppear,"Send : true | ALL GOOD | PF : "+pushFlag+" | SF "+(nrTimesNotficationAppear<=nrOfNotifications)+" | IC : "+internetConnection+" | ICL : "+internetConnectionLive); }
 
+                // all good normal shit
+                logsCollector.add("* Notification send : false");
+                logsCollector.add("* Next wake up set : "+millisSecondsDelay+" (millis)");
+                nextWakeUp = millisSecondsDelay;
+
+                nrTimesNotficationAppear++;
+                sharedEdit.putInt(getResources().getString(R.string.pref_key_timeNotificationAppears), nrTimesNotficationAppear);
+                sharedEdit.apply();
+
+            } else if (pushFlag && !internetConnectionLive && sercureFlag) {
                 if (mGae!=null) { mGae.getEvents(categoryNormalEvent,"NOTIFY_RATING_LIB No. "+nrTimesNotficationAppear,"Send : false | NO LIVE INTERNET | PF : "+pushFlag+" | SF "+(nrTimesNotficationAppear<=nrOfNotifications)+" | IC : "+internetConnection+" | ICL : "+internetConnectionLive); }
 
                 // all good but not LiveInternet
@@ -236,7 +271,6 @@ public class ServiceNotification extends Service {
                 logsCollector.add("* Next wake up set : "+millisSecondsAttempts+" (millis)");
                 nextWakeUp = millisSecondsAttempts;
             } else {
-
                 if (mGae!=null) { mGae.getEvents(categoryNormalEvent,"NOTIFY_RATING_LIB No. "+nrTimesNotficationAppear,"Send : false | >2 FALSE | PF : "+pushFlag+" | SF "+(nrTimesNotficationAppear<=nrOfNotifications)+" | IC : "+internetConnection+" | ICL : "+internetConnectionLive); }
 
                 // more stuff not good : Shut Down Service
@@ -266,20 +300,27 @@ public class ServiceNotification extends Service {
         String channelId = "channel-01";
         String channelName = "Channel Name1";
         int importance = NotificationManager.IMPORTANCE_HIGH;
+        if(isSilent){
+            importance = NotificationManager.IMPORTANCE_LOW;
+        }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel mChannel = new NotificationChannel(
                     channelId, channelName, importance);
             notificationManager.createNotificationChannel(mChannel);
         }
-
+        Log.d("aefasdf","1");
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(notificationIcon)
                 .setContentTitle(notificationTitle)
                 .setWhen(System.currentTimeMillis())
                 .setContentText(notificationSubtitle)
                 .setAutoCancel(true);
-
+        if(isSilent){
+            mBuilder.setDefaults(Notification.DEFAULT_LIGHTS);
+        }else {
+            mBuilder.setDefaults(Notification.DEFAULT_ALL);
+        }
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         stackBuilder.addNextIntent(myIntent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
@@ -290,6 +331,7 @@ public class ServiceNotification extends Service {
 
         notificationManager.notify(notificationId, mBuilder.build());
 
+
     }
 
 
@@ -297,17 +339,22 @@ public class ServiceNotification extends Service {
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
                 notificationBigIcon);
         int notificationId = 333;
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
         String channelId = "channel-02";
         String channelName = "Channel Name2";
         int importance = NotificationManager.IMPORTANCE_HIGH;
+        if(isSilent){
+             importance = NotificationManager.IMPORTANCE_LOW;
+        }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel mChannel = new NotificationChannel(
                     channelId, channelName, importance);
             notificationManager.createNotificationChannel(mChannel);
         }
 
+        Log.d("aefasdf","2");
         RemoteViews remoteViews = new RemoteViews(getPackageName(),notificationLayout);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(notificationSmallIcon)
@@ -320,6 +367,13 @@ public class ServiceNotification extends Service {
                         .bigPicture(icon)
                         .bigLargeIcon(null));
 
+        if(isSilent){
+            mBuilder.setDefaults(Notification.DEFAULT_LIGHTS);
+        }else {
+            mBuilder.setDefaults(Notification.DEFAULT_ALL);
+        }
+
+
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         stackBuilder.addNextIntent(intent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
@@ -329,10 +383,11 @@ public class ServiceNotification extends Service {
         mBuilder.setContentIntent(resultPendingIntent);
 
         notificationManager.notify(notificationId, mBuilder.build());
+
+
     }
 
     private void getSettingsFromPref() {
-        Log.d("asjkdhgfasdf","getSettingsFromPref");
         try {
             SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -361,6 +416,7 @@ public class ServiceNotification extends Service {
             notificationLayout = shared.getInt(getResources().getString(R.string.pref_key_notification_image_layout), R.layout.support_simple_spinner_dropdown_item);
 
             isnotificationImage = shared.getBoolean(getResources().getString(R.string.pref_key_notification_image_isimage), false);
+            isSilent = shared.getBoolean(getResources().getString(R.string.pref_key_notification_issilent), false);
 
             valueIntent =  shared.getString(getResources().getString(R.string.pref_key_notification_image_value_intent), getResources().getString(R.string.pref_key_notification_image_value_intent_default));
 
